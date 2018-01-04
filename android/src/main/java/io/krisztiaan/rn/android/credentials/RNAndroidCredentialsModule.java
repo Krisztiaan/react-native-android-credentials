@@ -291,18 +291,22 @@ public class RNAndroidCredentialsModule extends ReactContextBaseJavaModule
     }
 
     @Override
-    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == RC_READ && credentialRequestPromise != null) {
             if (resultCode == Activity.RESULT_OK) {
-                Credential credential = data.getParcelableExtra(Credential.EXTRA_KEY);
-                credentialRequestPromise.resolve(parseCredential(credential));
+                if (data != null) {
+                    Credential credential = data.getParcelableExtra(Credential.EXTRA_KEY);
+                    credentialRequestPromise.resolve(parseCredential(credential));
+                } else {
+                    credentialRequestPromise.reject("500", "Credential Read: NO DATA");
+                }
             } else {
                 credentialRequestPromise.reject("405", "Credential Read: NOT OK");
             }
         }
         if (requestCode == RC_SAVE && saveCredentialsPromise != null) {
             if (resultCode == Activity.RESULT_OK) {
-                saveCredentialsPromise.resolve(parseCredential((Credential) data.getParcelableExtra(Credential.EXTRA_KEY)));
+                saveCredentialsPromise.resolve(data != null ? parseCredential((Credential) data.getParcelableExtra(Credential.EXTRA_KEY)) : null);
             } else {
                 saveCredentialsPromise.reject("408", "SAVE: Canceled by user");
             }
