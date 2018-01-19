@@ -207,7 +207,11 @@ public class RNAndroidCredentialsModule extends ReactContextBaseJavaModule
                     @Override
                     public void onResult(@NonNull CredentialRequestResult credentialRequestResult) {
                         if (credentialRequestResult.getStatus().isSuccess()) {
-                            credentialRequestPromise.resolve(parseCredential(credentialRequestResult.getCredential()));
+                            if (credentialRequestPromise != null)
+                                credentialRequestPromise.resolve(parseCredential(credentialRequestResult.getCredential()));
+                            else
+                                Log.e(TAG, "Called multiple times, only last will return properly!");
+                            credentialRequestPromise = null;
                         } else {
                             resolveResult(promptIfMore, credentialRequestResult.getStatus());
                         }
@@ -232,13 +236,20 @@ public class RNAndroidCredentialsModule extends ReactContextBaseJavaModule
                     public void onResult(@NonNull Result result) {
                         Status status = result.getStatus();
                         if (status.isSuccess()) {
-                            saveCredentialsPromise.resolve(null);
+                            if (saveCredentialsPromise != null)
+                                saveCredentialsPromise.resolve(null);
+                            else
+                                Log.e(TAG, "Called multiple times, only last will return properly!");
+                            saveCredentialsPromise = null;
                         } else {
                             if (status.hasResolution()) {
                                 try {
                                     status.startResolutionForResult(getCurrentActivity(), RC_SAVE);
                                 } catch (IntentSender.SendIntentException e) {
-                                    saveCredentialsPromise.reject(e);
+                                    if (saveCredentialsPromise != null)
+                                        saveCredentialsPromise.reject(e);
+                                    else
+                                        Log.e(TAG, "Called multiple times, only last will return properly!");
                                     saveCredentialsPromise = null;
                                 }
                             } else {
@@ -254,13 +265,18 @@ public class RNAndroidCredentialsModule extends ReactContextBaseJavaModule
             try {
                 status.startResolutionForResult(getCurrentActivity(), RC_READ);
             } catch (IntentSender.SendIntentException e) {
-                credentialRequestPromise.reject(e);
+                if (credentialRequestPromise != null)
+                    credentialRequestPromise.reject(e);
+                else Log.e(TAG, "Called multiple times, only last will return properly!");
                 credentialRequestPromise = null;
             }
         } else {
-            credentialRequestPromise.reject(
-                    String.valueOf(status.getStatusCode()),
-                    status.getStatusMessage());
+            if (credentialRequestPromise != null)
+                credentialRequestPromise.reject(
+                        String.valueOf(status.getStatusCode()),
+                        status.getStatusMessage());
+            else Log.e(TAG, "Called multiple times, only last will return properly!");
+            credentialRequestPromise = null;
         }
     }
 
