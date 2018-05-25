@@ -1,5 +1,7 @@
 # react-native-android-credentials
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Krisztiaan/react-native-android-credentials.svg)](https://greenkeeper.io/)
+
 ## Getting started
 
 `$ npm install react-native-android-credentials --save`
